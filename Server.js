@@ -14,14 +14,14 @@ const Pelicula = require('./models/Pelicula');
 const Categoria = require('./models/Categoria');
 const { UsuarioPelicula } = require('./models/UsuarioPelicula');
 
-const UMBRAL_NOMBRE_PELICULA = 0.8; // Ajusta el umbral de similitud entre 2 nombres ed pelicula
+const UMBRAL_NOMBRE_PELICULA = 0.8; // Ajusta el umbral de similitud entre 2 nombres de pelicula
 
 conectarDB();
 sequelize.sync()
 	.then(() => console.log('🟢 Base de datos sincronizada'))
 	.catch(err => console.error('🔴 Error al sincronizar:', err));
   
-app.use(express.json()); // Middleware para procesar JSON
+app.use(express.json());
 
 app.get('/', (req, res) => {
   res.json({ mensaje: 'API funcionando' });
@@ -40,14 +40,13 @@ app.post('/user/create', async (req, res) => {
   }
 
   try {
-    // Verificamos si el usuario ya existe
+    
     const usuarioExistente = await Usuario.findOne({ where: { email } });
 
     if (usuarioExistente) {
       return res.status(400).json({ mensaje: 'El email ya está registrado' });
     }
-
-    // Crear el nuevo usuario
+    
     const nuevoUsuario = await Usuario.create({ nombre, email });
 
     res.status(201).json({ mensaje: 'Usuario creado exitosamente', usuario: nuevoUsuario });
@@ -60,6 +59,7 @@ app.post('/user/create', async (req, res) => {
 
 app.post('/user/list', async (req, res) => {
   try {
+
     const usuarios = await Usuario.findAll(); // Obtener todos los usuarios
 
     res.json({
@@ -164,16 +164,14 @@ app.post('/user/delete', async (req, res) => {
   const { id_user } = req.body;
 
   try {
-    // Buscar el usuario
+    
     const usuario = await Usuario.findByPk(id_user);
     if (!usuario) {
       return res.status(404).json({ mensaje: 'Usuario no encontrado' });
     }
-
-    // Eliminar registros en la tabla intermedia "UsuarioPelicula" antes de eliminar el usuario
+    
     await UsuarioPelicula.destroy({ where: { id_usuario: id_user } });
 
-    // Ahora sí, eliminar el usuario
     await usuario.destroy();
 
     res.json({ mensaje: 'Usuario eliminado correctamente' });
@@ -202,7 +200,6 @@ app.post('/movie/create', [
   
   const { nombre, categoria, fecha_estreno } = req.body;
 
-  //asegurarse que el nombre de la pelicula no este repetido
   const peliculas = await Pelicula.findAll({ attributes: ['nombre'] });
   const nombresPeliculas = peliculas.map(p => p.nombre);
 
@@ -217,10 +214,9 @@ app.post('/movie/create', [
 
   try {
     
-
     const nuevaPelicula = await Pelicula.create({ "nombre": nombre, "id_categoria": categoria, "fecha_estreno": fecha_estreno });
-
     res.status(201).json({ mensaje: 'Película creada exitosamente', pelicula: nuevaPelicula });
+
   } catch (error) {
     console.error('Error al crear la película:', error);
     res.status(500).json({ mensaje: 'Error interno del servidor' });
@@ -233,10 +229,9 @@ app.post('/movie/list', async (req, res) => {
     const { filtro_nombre, filtro_categoria, order } = req.body;
     let { page, limit } = req.query; // Obtener page y limit de los query params
 
-    // Valores por defecto
-    page = parseInt(page) || 1; // Si no existe, es 1
-    limit = parseInt(limit) || 10; // Si no existe, es 10
-    const offset = (page - 1) * limit; // Calcular desde dónde empezar
+    page = parseInt(page) || 1; 
+    limit = parseInt(limit) || 10;
+    const offset = (page - 1) * limit;
 
     let whereClause = {};
 
